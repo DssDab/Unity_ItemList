@@ -94,6 +94,7 @@ public class ItemList_Mgr : MonoBehaviour
                         SaveList();
                         RefreshUiList();
                         m_ItemInfoText.text = "";
+                        m_Info.gameObject.SetActive(false);
                     }
                    else
                     {
@@ -145,10 +146,6 @@ public class ItemList_Mgr : MonoBehaviour
         {
             TextTime = 0.0f;
             m_UpSucText.text = "";
-            if(string.IsNullOrEmpty(m_ItemName.text) == true)
-            {
-                m_ItemInfoText.text = "";
-            }
         }
     }
 
@@ -158,7 +155,7 @@ public class ItemList_Mgr : MonoBehaviour
         m_ItemName.text = "";
         a_Itemname = a_Itemname.Trim();
         int a_Level = Random.Range(1,9);
-        int a_Tier = Random.Range(1, 8);
+        int a_Tier = Random.Range(6, 8);
         int a_Price = Random.Range(700, 1601);
         int a_Order = 0;
         float a_LvPer = 100.0f;
@@ -181,11 +178,11 @@ public class ItemList_Mgr : MonoBehaviour
         
         SaveList();
         RefreshUiList();
-        
 
     }
     private void SearchClick()
     {
+        
         string SameText = m_ItemName.text;
         float LvPer = 100.0f;
         float TrPer = 100.0f;
@@ -199,16 +196,16 @@ public class ItemList_Mgr : MonoBehaviour
             TextTime = 3.0f;
             return;
         }
-        m_ItemInfoText.text = string.Format("\"[{0}] : 레벨({1}) 등급({2}) 가격({3}) \n",
+        m_ItemInfoText.text = string.Format("[{0}] : 레벨({1}) 등급({2}) 가격({3})",
         a_Node.m_Name, a_Node.m_Level, a_Node.m_Tier, a_Node.m_Price);
         for (int i = 1; i < a_Node.m_Level; i++)
         {
-            LvPer *= 0.96f;
+            LvPer *= 0.965f;
         }
         a_Node.m_LvPer = LvPer;
-        for (int j = 1; j < a_Node.m_Tier; j++)
+        for (int j = 7; j > a_Node.m_Tier; j--)
         {
-            TrPer *= 0.96f;
+            TrPer *= 0.85f;
         }
         a_Node.m_TrPer = TrPer;
         for (int i=0;i<m_ItemMgr.Count;i++) 
@@ -216,14 +213,16 @@ public class ItemList_Mgr : MonoBehaviour
             m_ItemMgr[i].m_LvPer = (int)a_Node.m_LvPer;
             m_ItemMgr[i].m_TrPer = (int)a_Node.m_TrPer;
         }
-        
-        
+        m_Info.gameObject.SetActive(true);
+
+        m_LvPercentText.text = string.Format("확률 : {0}%", a_Node.m_LvPer.ToString("F0"));
+        m_TierPercentText.text = string.Format("확률 : {0}%", a_Node.m_TrPer.ToString("F0"));
         SaveList();
         RefreshUiList();
-        m_Info.gameObject.SetActive(true);
     }
     private void LvUpClick()
     {
+        
         int LvUp = Random.Range(1, 101);
         string TempName = m_ItemName.text;
         if (string.IsNullOrEmpty(m_ItemInfoText.text) == true)
@@ -233,37 +232,84 @@ public class ItemList_Mgr : MonoBehaviour
 
            if (TempName == m_ItemMgr[i].m_Name)
            {
+                if (m_ItemMgr[i].m_LvPer <= 0.0f)
+                    return;
 
                     if (m_ItemMgr[i].m_Level >= 1 && LvUp <= m_ItemMgr[i].m_LvPer)
                     {
-                            m_ItemMgr[i].m_LvPer *= 0.96f;
+                            m_ItemMgr[i].m_LvPer *= 0.965f;
                             m_ItemMgr[i].m_Level++;
-                            m_UpSucText.text = "강화에 성공하셨습니다!!";
-                    m_ItemInfoText.text = string.Format("\"[{0}] : 레벨({1}) 등급({2}) 가격({3}) \n",
+                            m_ItemMgr[i].m_Price += 100;
+
+                    m_UpSucText.text = "강화에 성공하셨습니다!! 레벨 +1 상승";
+                    m_ItemInfoText.text = string.Format("[{0}] : 레벨({1}) 등급({2}) 가격({3})",
                                                 m_ItemMgr[i].m_Name, m_ItemMgr[i].m_Level, m_ItemMgr[i].m_Tier, m_ItemMgr[i].m_Price);
-                    m_LvPercentText.text = "확률 : " + (int)m_ItemMgr[i].m_LvPer + "%";
                     TextTime = 3.0f;
-                            return;
-                    }
-                    else
-                    {
+                    m_LvPercentText.text = string.Format("확률 : {0}%", (int)m_ItemMgr[i].m_LvPer);
+                }
+                   else 
+                   {
+                    m_UpSucText.text = "강화에 실패하여 아이템"+(i+1)+"번 "+m_ItemMgr[i].m_Name+" 이(가) 가루가 되었습니다...";
+                    m_Info.gameObject.SetActive(false);
                     PlayerPrefs.DeleteKey(m_ItemMgr[i].m_Name);
                     m_ItemMgr.RemoveAt(i);
-                    m_UpSucText.text = "강화에 실패하여 아이템이 파괴 되었습니다...";
                     TextTime = 3.0f;
                     m_ItemInfoText.text = "";
-                    }
-                    
-
+                   }
            }
            
         }
         SaveList();
         RefreshUiList();
-    }       
+
+    }
     private void TrUpClick()
     {
+        
+        int TrUp = Random.Range(1, 101);
+        string TempName = m_ItemName.text;
+        if (string.IsNullOrEmpty(m_ItemInfoText.text) == true)
+            return;
+        for (int i = 0; i < m_ItemMgr.Count; i++)
+        {
 
+            if (TempName == m_ItemMgr[i].m_Name)
+            {
+                if (m_ItemMgr[i].m_Tier == 1)
+                {
+                    m_UpSucText.text = "아이템이 최고 등급이라 더 이상 강화가 불가능합니다.";
+                    m_ItemMgr[i].m_TrPer = 100.0f;
+                    TextTime = 3.0f;
+                    break;
+                }
+
+                if (m_ItemMgr[i].m_Tier > 1 && TrUp <= m_ItemMgr[i].m_TrPer)
+                {
+                    m_ItemMgr[i].m_TrPer *= 0.84f;
+                    m_ItemMgr[i].m_Tier--;
+                    m_ItemMgr[i].m_Price *= 2;
+
+                    m_UpSucText.text = "강화에 성공하셨습니다!! 등급 +1 상승";
+                    m_ItemInfoText.text = string.Format("[{0}] : 레벨({1}) 등급({2}) 가격({3})",
+                                                m_ItemMgr[i].m_Name, m_ItemMgr[i].m_Level, m_ItemMgr[i].m_Tier, m_ItemMgr[i].m_Price);
+                    m_TierPercentText.text = string.Format("확률 : {0}%", (int)m_ItemMgr[i].m_TrPer);
+                    TextTime = 3.0f;
+
+                }
+                else
+                {
+                    m_UpSucText.text = "등급업에 실패하여 아이템" + (i + 1) + "번 " + m_ItemMgr[i].m_Name + " 이(가) 가루가 되었습니다...";
+                    PlayerPrefs.DeleteKey(m_ItemMgr[i].m_Name);
+                    m_Info.gameObject.SetActive(false);
+                    m_ItemMgr.RemoveAt(i);
+                    TextTime = 3.0f;
+                    m_ItemInfoText.text = "";
+                }
+            }
+
+        }
+        SaveList();
+        RefreshUiList();
     }
  
     void SaveList()
@@ -295,8 +341,6 @@ public class ItemList_Mgr : MonoBehaviour
             a_KeyBuff = string.Format("Item_TrPer{0}", i);
             PlayerPrefs.SetFloat(a_KeyBuff, a_Node.m_TrPer);
         }
-
-
     }
     void LoadList()
     {
@@ -330,25 +374,15 @@ public class ItemList_Mgr : MonoBehaviour
     void RefreshUiList()
     {
         string a_KeyBuff = "";
-        string a_LvPer = "";
-        string a_TrPer = "";
+
         for (int i = 0; i < m_ItemMgr.Count; i++)
         {
             a_KeyBuff += string.Format("[{0}] : 레벨({1}) 등급({2}) 가격({3}) ",
                                         m_ItemMgr[i].m_Name, m_ItemMgr[i].m_Level, m_ItemMgr[i].m_Tier, m_ItemMgr[i].m_Price);
             a_KeyBuff += "\n";
 
-            a_LvPer = string.Format("확률 : {0}%", m_ItemMgr[i].m_LvPer);
-            a_TrPer = string.Format("확률 : {0}%", m_ItemMgr[i].m_TrPer);
-
         }
         if (m_ItemListText != null)
             m_ItemListText.text = a_KeyBuff;
-            if(m_LvPercentText != null)
-                m_LvPercentText.text = a_LvPer;
-            if(m_TierPercentText != null)
-                m_TierPercentText.text = a_TrPer;
-
-            
     }
 }
