@@ -147,6 +147,10 @@ public class ItemList_Mgr : MonoBehaviour
             TextTime = 0.0f;
             m_UpSucText.text = "";
         }
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
     }
 
     private void AddClick()
